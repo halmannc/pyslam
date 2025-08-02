@@ -38,7 +38,7 @@ class DataCollector():
         #                            for (kpi, kpsu) in enumerate(f.kpsu)   if f.points[kpi]], \
         #                    dtype=np.float32)
         
-        self.col_labels = ["frame_id", "point_id" "kp_idx", "kpu_u", "kpu_v", "kp_response", "kp_p_reproj_err"]
+        self.cols_data = ["frame_id", "point_id", "kp_idx", "kpu_u", "kpu_v", "kp_response", "kp_p_reproj_err", "kp_des_angle", "kp_octave", "kp_des"] # keep kp_des at the end
         self.data = []
 
     
@@ -50,10 +50,11 @@ class DataCollector():
         '''
         # index can be a float because an int is represented exactly up to the mantissa 2^23 for float32
         # frame_id is unique and kp_idx is unique within a frame
-        # take only kp that have a world point
-        self.data.extend([ [ f.id, f.points[kpi].id, kpi, kpsu[0], kpsu[1], f.response[kpi], self.p_to_kp_reprojection_err(kpi, f) ] \
-                                for (kpi, kpsu) in enumerate(f.kpsu)   if f.points[kpi] ])
-    
+        # take only kp that have a world point which not is_bad (has at least 2 observations)
+        self.data.extend([ [ f.id, f.points[kpi].id, kpi, kpsu[0], kpsu[1], f.response[kpi], \
+                             self.p_to_kp_reprojection_err(kpi, f), f.angles[kpi], f.octaves[kpi], f.des[kpi] ] \
+                                for (kpi, kpsu) in enumerate(f.kpsu)   if (f.points[kpi] and not f.points[kpi].is_bad) ]) 
+        
     
     # inspired on map.remove_points_with_big_reproj_err() 
     def p_to_kp_reprojection_err(self, kpidx:int, frame:Frame) -> float:
@@ -75,7 +76,12 @@ class DataCollector():
         '''
         # save as np array not to import pandas
         # convert list to np.array just now because np is inneficient to append data
-        data = np.array(self.data, dtype=np.float32)
-        cols = np.array(self.col_labels, dtype=str)
-        np.savez("data_collected.npz", cols=cols, data=data )
+        des_col = -1  # to keep descriptors in the last column separate because of the shape
+        data_without_descriptors = np.array([row[:des_col] for row in self.data], dtype=np.float32)  # all columns except descriptors
+        descriptors = np.array([row[des_col] for row in self.data], dtype=np.uint8)  # just the descriptors
+        cols_data_without_descriptors = np.array(self.cols_data[:des_col], dtype=str)
+        filename = "data_collected.npz"
+        np.savez(filename, cols_data_without_descriptors=cols_data_without_descriptors, data_without_descriptors=data_without_descriptors, descriptors=descriptors )
+        print("DataCollector: Saved", filename, "with", len(self.data), "key points")
+
     

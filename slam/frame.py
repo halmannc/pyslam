@@ -453,11 +453,12 @@ class Frame(FrameBase):
                                                                                 
             # convert from a list of keypoints to arrays of points, octaves, sizes  
             if self.kps is not None:    
-                kps_data = np.array([ [x.pt[0], x.pt[1], x.octave, x.size, x.angle] for x in self.kps ], dtype=np.float32)                     
+                kps_data = np.array([ [x.pt[0], x.pt[1], x.octave, x.size, x.angle, x.response] for x in self.kps ], dtype=np.float32)                     
                 self.kps     = kps_data[:,:2] if kps_data is not None else None
                 self.octaves = np.uint32(kps_data[:,2]) #print('octaves: ', self.octaves)                    
                 self.sizes   = kps_data[:,3]
                 self.angles  = kps_data[:,4]  
+                self.response  = kps_data[:,5]  
                 if self.camera is not None:
                     self.kpsu = self.camera.undistort_points(self.kps) # convert to undistorted keypoint coordinates             
                     self.kpsn = self.camera.unproject_points(self.kpsu)

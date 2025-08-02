@@ -44,6 +44,8 @@ import g2o
 import optimizer_g2o 
 import optimizer_gtsam
 
+from DataCollector import DataCollector
+
 kVerbose = True 
 kMaxLenFrameDeque = 20
 
@@ -86,6 +88,8 @@ class Map(object):
         self.local_map = LocalCovisibilityMap(map=self)
         
         self.viewer_scale = -1
+
+        self.data_collector = DataCollector()
         
     def is_reloaded(self):
         return self.reloaded_session_map_info is not None

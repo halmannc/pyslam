@@ -333,12 +333,12 @@ if __name__ == "__main__":
             f.write(f'num_lost_frames: {num_tracking_lost}\n')
             f.write(f'percent_lost: {num_tracking_lost/num_total_frames*100:.2f}\n')
         
-        slam.map.data_collector.save()
-        
     except Exception as e:
         print('Exception while computing metrics: ', e)
         print(f'traceback: {traceback.format_exc()}')
 
+    slam.map.data_collector.save()
+        
     # close stuff 
     slam.quit()
     if plot_drawer:

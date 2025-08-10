@@ -18,6 +18,7 @@ Steps
 """
 import numpy as np
 from frame import Frame, FeatureTrackerShared, FrameBase
+import traceback
 
 # Added data elements
 # Frame.__init__:456: kps_data = np.array([ [x.pt[0], x.pt[1], x.octave, x.size, x.angle, x.response] for x in self.kps ], dtype=np.float32)                     
@@ -76,12 +77,16 @@ class DataCollector():
         '''
         # save as np array not to import pandas
         # convert list to np.array just now because np is inneficient to append data
-        des_col = -1  # to keep descriptors in the last column separate because of the shape
-        data_without_descriptors = np.array([row[:des_col] for row in self.data], dtype=np.float32)  # all columns except descriptors
-        descriptors = np.array([row[des_col] for row in self.data], dtype=np.uint8)  # just the descriptors
-        cols_data_without_descriptors = np.array(self.cols_data[:des_col], dtype=str)
-        filename = "data_collected.npz"
-        np.savez(filename, cols_data_without_descriptors=cols_data_without_descriptors, data_without_descriptors=data_without_descriptors, descriptors=descriptors )
-        print("DataCollector: Saved", filename, "with", len(self.data), "key points")
+        try:
+            des_col = -1  # to keep descriptors in the last column separate because of the shape
+            data_without_descriptors = np.array([row[:des_col] for row in self.data], dtype=np.float32)  # all columns except descriptors
+            descriptors = np.array([row[des_col] for row in self.data], dtype=np.uint8)  # just the descriptors
+            cols_data_without_descriptors = np.array(self.cols_data[:des_col], dtype=str)
+            filename = "data_collected.npz"
+            np.savez(filename, cols_data_without_descriptors=cols_data_without_descriptors, data_without_descriptors=data_without_descriptors, descriptors=descriptors )
+            print("DataCollector: Saved", filename, "with", len(self.data), "key points")
+        except Exception as e:
+            print('Exception while saving DataCollector: ', e)
+            print(f'traceback: {traceback.format_exc()}')
 
     

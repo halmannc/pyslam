@@ -1,0 +1,57 @@
+#--------------------------------------------------------------------------------------------
+# Viewer Parameters (used same as kitti)
+#--------------------------------------------------------------------------------------------
+# Viewer.on: 1 is ON, 0 is OFF
+Viewer.on: 1
+
+Viewer.KeyFrameSize: 0.6
+Viewer.KeyFrameLineWidth: 2
+Viewer.GraphLineWidth: 1
+Viewer.PointSize: 8
+Viewer.LineSize: 1
+Viewer.CameraSize: 0.7
+Viewer.CameraLineWidth: 3
+Viewer.ViewpointX: 0
+Viewer.ViewpointY: -100
+Viewer.ViewpointZ: -0.1
+Viewer.ViewpointF: 2000
+#--------------------------------------------------------------------------------------------
+# Camera Parameters. Adjust them! (list of params based on kitti00-02.yaml and webcam.yaml)
+#--------------------------------------------------------------------------------------------
+
+# Camera matrix from marulan paper Matlab output:
+# Focal length: fc = [1023.094873083798120; 1020.891695892045050];
+# %-- Principal point: cc = [643.139025535655492; 482.455417980580421];
+# %-- Skew coefficient: alpha c = 0.000000000000000;
+# %-- Distortion coefficients:
+# kc = [-0.218504818968279; 0.138951469767851; -0.000755791245166; 0.000175881419552; 0.000000000000000];
+# %-- Image size: nx = 1360; ny = 1024;
+
+# Camera calibration and distortion parameters (OpenCV) 
+Camera.fx: 1023.094873083798120
+Camera.fy: 1020.891695892045050
+Camera.cx: 643.139025535655492
+Camera.cy: 482.455417980580421
+
+Camera.k1: -0.218504818968279
+Camera.k2: 0.138951469767851
+Camera.p1: -0.000755791245166
+Camera.p2: 0.000175881419552
+Camera.k3: 0.000000000000000
+# Pixel error remining: err = [ 0.19209 0.20252 ]
+
+Camera.width: 1360
+Camera.height: 1024
+
+# Camera frames per second 
+Camera.fps: 10.0
+
+# Color order of the images (0: BGR, 1: RGB. It is ignored if images are grayscale)
+Camera.RGB: 1
+
+#--------------------------------------------------------------------------------------------
+# Features extraction 
+#--------------------------------------------------------------------------------------------
+
+FeatureTrackerConfig.nFeatures: 2000
+

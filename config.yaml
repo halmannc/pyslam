@@ -6,10 +6,10 @@ DATASET:
   #type: ICL_NUIM_DATASET
   #type: REPLICA_DATASET
   #type: TARTANAIR_DATASET
-  type: VIDEO_DATASET
+  #type: VIDEO_DATASET  # for kitti
   #type: ROS1BAG_DATASET
   #type: ROS2BAG_DATASET  
-  #type: FOLDER_DATASET
+  type: FOLDER_DATASET  # for marulan
   #type: LIVE_DATASET  # Not recommended for current development stage
 
 
@@ -110,13 +110,13 @@ VIDEO_DATASET:
   type: video
   sensor_type: mono   # Here, 'sensor_type' can be only 'mono' 
   #
-  # base_path: ./data/videos/kitti00
-  # settings: settings/KITTI00-02.yaml
-  # name: video.mp4
+  base_path: ./data/videos/kitti00
+  settings: settings/KITTI00-02.yaml
+  name: video.mp4
   #
-  base_path: ./data/videos/kitti06
-  settings: settings/KITTI04-12.yaml
-  name: video_color.mp4
+  #base_path: ./data/videos/kitti06
+  #settings: settings/KITTI04-12.yaml
+  #name: video_color.mp4
   #
   #base_path: ./data/videos/webcam
   #settings: settings/WEBCAM.yaml 
@@ -129,14 +129,14 @@ VIDEO_DATASET:
 FOLDER_DATASET:
   type: folder 
   sensor_type: mono   # Here, 'sensor_type' can be only 'mono' 
-  base_path: /home/luigi/Work/rgbd_datasets2/kitti/dataset/sequences/00/image_0/
+  base_path: /mnt/c/src/tcc/datasets/ACFR/29-DynamicDayTriangleClear/VideoVisual/
   # 'name' is used for specifying a glob pattern, e.g. *png, *jpeg, etc...
-  name: '*png'  
-  settings: settings/KITTI00-02.yaml
-  groundtruth_file: groundtruth.txt
-  fps: 20
-  #timestamps: times.txt # can be used here and to be intended as the frame timestamps 
-
+  name: 'Images/*bmp'  
+  settings: settings/MarulanVisual.yaml
+  #groundtruth_file: groundtruth.txt
+  fps: 10
+  timestamps: Timestamps.txt # can be used here and to be intended as the frame timestamps 
+  start_frame_id: 270
 
 ROS1BAG_DATASET:
   type: ros1bag 

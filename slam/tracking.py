@@ -1065,7 +1065,7 @@ class Tracking:
                                   
         # end block {with self.map.update_lock:}  
                                              
-        self.map.data_collector.collect_frame(self.f_cur)
+        self.map.data_collector.collect_frame(self.f_cur, img)
 
         # NOTE: this reset must be outside the block {with self.map.update_lock:}  
         need_reset = self.slam.reset_requested or (self.state == SlamState.LOST and self.map.num_keyframes_session() <= 5)                  

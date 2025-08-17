@@ -17,7 +17,12 @@ Steps
 
 """
 import numpy as np
+if __name__ == "__main__":
+    # just to setup the environment for testing
+    import main_slam
 from frame import Frame, FeatureTrackerShared, FrameBase
+import cv2
+
 import traceback
 
 # Added data elements
@@ -45,18 +50,42 @@ class DataCollector():
     
     # collect data on every tracked frame
     # first two frames are not valid, place collect_frame after initialization 
-    def collect_frame(self, f:Frame):
+    def collect_frame(self, f:Frame, img):
         '''
         Collect data from frame
         '''
         # index can be a float because an int is represented exactly up to the mantissa 2^23 for float32
         # frame_id is unique and kp_idx is unique within a frame
         # take only kp that have a world point which not is_bad (has at least 2 observations)
+        # the patch has to be centered on the kps (coordinates returned by cv2, see frame.py L456)
         self.data.extend([ [ f.id, f.points[kpi].id, kpi, kpsu[0], kpsu[1], f.response[kpi], \
-                             self.p_to_kp_reprojection_err(kpi, f), f.angles[kpi], f.octaves[kpi], f.des[kpi] ] \
+                             self.p_to_kp_reprojection_err(kpi, f), f.angles[kpi], f.octaves[kpi], \
+                             self.get_patch(f.kps[kpi], f.sizes[kpi], f.angles[kpi], img),  f.des[kpi] ] \
                                 for (kpi, kpsu) in enumerate(f.kpsu)   if (f.points[kpi] and not f.points[kpi].is_bad) ]) 
         
-    
+    def get_patch(self, kpuv, size, angle, img):
+        '''
+        get 16x16 gray patch from image at keypoint location
+        kp:[u,v] center of patch, size:int , img:[]
+        recortar um pedaço maior, converter para cinza, rotacionar, reduzir à oitava, recortar 16x16
+
+        '''
+        # check if patch size can be extracted
+        room_for_patch_rotation = (kpuv[0] > size) and (kpuv[1] > size) and (img.shape[0]-kpuv[0]) > size and (img.shape[1]-kpuv[1]) > size
+        size_out = 16
+        if room_for_patch_rotation:
+            patch = img[int(kpuv[0]-size):int(kpuv[0]+size), int(kpuv[1]-size):int(kpuv[1]+size)]
+            if len(patch.shape) > 2:
+                if patch.shape[2] > 1:
+                    patch = cv2.cvtColor(patch, cv2.COLOR_RGB2GRAY)
+            rot_m = cv2.getRotationMatrix2D((size,size), angle, size_out/size)
+            patch = cv2.warpAffine(patch, rot_m, patch.shape, flags=cv2.INTER_NEAREST)
+            min, max = int(size-size_out/2), int(size+size_out/2)
+            patch = patch[min:max, min:max]
+        else:
+            patch = np.zeros((size_out, size_out))
+        return patch
+
     # inspired on map.remove_points_with_big_reproj_err() 
     def p_to_kp_reprojection_err(self, kpidx:int, frame:Frame) -> float:
         '''
@@ -79,14 +108,52 @@ class DataCollector():
         # convert list to np.array just now because np is inneficient to append data
         try:
             des_col = -1  # to keep descriptors in the last column separate because of the shape
-            data_without_descriptors = np.array([row[:des_col] for row in self.data], dtype=np.float32)  # all columns except descriptors
+            img_col = -2
+            data_without_descriptors = np.array([row[:img_col] for row in self.data], dtype=np.float32)  # all columns except descriptors
             descriptors = np.array([row[des_col] for row in self.data], dtype=np.uint8)  # just the descriptors
-            cols_data_without_descriptors = np.array(self.cols_data[:des_col], dtype=str)
+            patches = np.array([row[img_col] for row in self.data], dtype=np.uint8)  # just the patches
+            cols_data_without_descriptors = np.array(self.cols_data[:img_col], dtype=str)
             filename = "data_collected.npz"
-            np.savez(filename, cols_data_without_descriptors=cols_data_without_descriptors, data_without_descriptors=data_without_descriptors, descriptors=descriptors )
+            np.savez(filename, cols_data_without_descriptors=cols_data_without_descriptors, data_without_descriptors=data_without_descriptors, 
+                     descriptors=descriptors, patches=patches )
             print("DataCollector: Saved", filename, "with", len(self.data), "key points")
         except Exception as e:
             print('Exception while saving DataCollector: ', e)
             print(f'traceback: {traceback.format_exc()}')
 
+if __name__  == "__main__":
+    
+    # test the implementation of get_patch()
+    import matplotlib.pyplot as plt
+    img_size = 100
+    img_half_size = int(img_size/2)
+    img = np.zeros((img_size, img_size), dtype=np.uint8)  # type needs to be uint8
+    halftone = 127
+    bright = 255
+    img.fill(halftone)
+    img[img_half_size:,img_half_size:].fill(bright)
+    orb = cv2.ORB_create()
+    kps, des = cv2.ORB.detectAndCompute(orb, img, None)
+    green = (0, 255, 0)
+    img_with_keypoints = cv2.drawKeypoints(img, kps, None, color=green, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    cv2.imshow('img_with_keypoints', img_with_keypoints)
+    cv2.waitKey(0)
+    
+    dc = DataCollector()
+    for kp in kps:
+        patch = dc.get_patch(kp.pt, kp.size, kp.angle, img)
+        cv2.imshow('patch',patch)
+        cv2.waitKey(0)
+    
+    cv2.destroyAllWindows()
+
+#    orb = cv2.ORB_create()
+#    kps, des = cv2.ORB.detectAndCompute(orb, img, None)
+#
+#    plt.imshow(img)
+#    plt.show()
+#
+#    cv2.imshow('img',img)
+#    cv2.waitKey(0)
+#    cv2.destroyAllWindows()
     

@@ -136,7 +136,7 @@ FOLDER_DATASET:
   #groundtruth_file: groundtruth.txt
   fps: 10
   timestamps: Timestamps.txt # can be used here and to be intended as the frame timestamps 
-  start_frame_id: 270
+  start_frame_id: 0
 
 ROS1BAG_DATASET:
   type: ros1bag 

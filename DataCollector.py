@@ -60,27 +60,37 @@ class DataCollector():
         # the patch has to be centered on the kps (coordinates returned by cv2, see frame.py L456)
         self.data.extend([ [ f.id, f.points[kpi].id, kpi, kpsu[0], kpsu[1], f.response[kpi], \
                              self.p_to_kp_reprojection_err(kpi, f), f.angles[kpi], f.octaves[kpi], \
-                             self.get_patch(f.kps[kpi], f.sizes[kpi], f.angles[kpi], img),  f.des[kpi] ] \
+                             self.get_patch(f.kps[kpi], f.sizes[kpi], 0, img),  f.des[kpi] ] \
                                 for (kpi, kpsu) in enumerate(f.kpsu)   if (f.points[kpi] and not f.points[kpi].is_bad) ]) 
-        
+                            
+                            #above is an experiment with no rotation, below is the original line for reference
+                            #self.get_patch(f.kps[kpi], f.sizes[kpi], f.angles[kpi], img),  f.des[kpi] ] \
+                            
+                             
     def get_patch(self, kpuv, size, angle, img):
         '''
         get 16x16 gray patch from image at keypoint location
-        kp:[u,v] center of patch, size:int , img:[]
+        descale the size to 31 and rotate 
+        kp:[u,v] center of patch , size:float , angle:float , img:array[]  
         recortar um pedaço maior, converter para cinza, rotacionar, reduzir à oitava, recortar 16x16
 
         '''
-        # check if patch size can be extracted
-        room_for_patch_rotation = (kpuv[0] > size) and (kpuv[1] > size) and (img.shape[0]-kpuv[0]) > size and (img.shape[1]-kpuv[1]) > size
+        # check if kpuv has margin to rotate and extract a clean patch, this excludes point too close to the border
+        margin = np.ceil(size*np.sqrt(2))
+        room_for_patch_rotation = (kpuv[0] > margin) and (kpuv[1] > margin) and (img.shape[0]-kpuv[0]) > margin and (img.shape[1]-kpuv[1]) > margin
         size_out = 16
         if room_for_patch_rotation:
-            patch = img[int(kpuv[0]-size):int(kpuv[0]+size), int(kpuv[1]-size):int(kpuv[1]+size)]
+            kp_base_size = 31
+            patch_center = int(size)
+            patch = img[int(kpuv[0]-patch_center):int(kpuv[0]+patch_center), int(kpuv[1]-patch_center):int(kpuv[1]+patch_center)]
             if len(patch.shape) > 2:
                 if patch.shape[2] > 1:
+                    # if patch has more than one color layer
                     patch = cv2.cvtColor(patch, cv2.COLOR_RGB2GRAY)
-            rot_m = cv2.getRotationMatrix2D((size,size), angle, size_out/size)
+            # rotate around center of patch and scale to the kp_base_size
+            rot_m = cv2.getRotationMatrix2D((patch_center,patch_center), angle, kp_base_size/size)
             patch = cv2.warpAffine(patch, rot_m, patch.shape, flags=cv2.INTER_NEAREST)
-            min, max = int(size-size_out/2), int(size+size_out/2)
+            min, max = int(patch_center-size_out/2), int(patch_center+size_out/2)
             patch = patch[min:max, min:max]
         else:
             patch = np.zeros((size_out, size_out))
@@ -125,25 +135,38 @@ if __name__  == "__main__":
     
     # test the implementation of get_patch()
     import matplotlib.pyplot as plt
-    img_size = 100
-    img_half_size = int(img_size/2)
+    import matplotlib as mpl
+    img_size = 200
+    img_fill_start = int(img_size/4)
+    img_fill_end = img_size-img_fill_start
     img = np.zeros((img_size, img_size), dtype=np.uint8)  # type needs to be uint8
     halftone = 127
     bright = 255
     img.fill(halftone)
-    img[img_half_size:,img_half_size:].fill(bright)
+    step_size = 6 # aplox diagonal 8*sqrt(2) 
+    steps = 3
+    tone_step_size = (bright - halftone) / steps
+    for step in range(steps):
+        img[img_fill_start+step*step_size:img_fill_end,img_fill_start+step*step_size:img_fill_end].fill(bright-step*tone_step_size)
     orb = cv2.ORB_create()
     kps, des = cv2.ORB.detectAndCompute(orb, img, None)
     green = (0, 255, 0)
     img_with_keypoints = cv2.drawKeypoints(img, kps, None, color=green, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    fig, ax = plt.subplots()
+    ax.imshow(img_with_keypoints)
     cv2.imshow('img_with_keypoints', img_with_keypoints)
-    cv2.waitKey(0)
+    #cv2.waitKey(0)
     
     dc = DataCollector()
-    for kp in kps:
-        patch = dc.get_patch(kp.pt, kp.size, kp.angle, img)
-        cv2.imshow('patch',patch)
-        cv2.waitKey(0)
+    patches= np.empty((16, 0), dtype='uint8')
+    for i, kp in enumerate(kps):
+        patches = np.append(patches, dc.get_patch(kp.pt, kp.size, kp.angle, img), axis=1)
+    fig, ax = plt.subplots()
+    ax.imshow(patches)
+    cv2.imshow('patches',patches)
+    fig, ax = plt.subplots()
+    mpl.widgets.TextBox(ax, "Info:\nHit a key to close the cv2 window and finish the program")
+    cv2.waitKey(0)
     
     cv2.destroyAllWindows()
 

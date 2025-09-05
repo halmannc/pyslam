@@ -1,0 +1,62 @@
+#--------------------------------------------------------------------------------------------
+# Viewer Parameters (used same as kitti)
+#--------------------------------------------------------------------------------------------
+# Viewer.on: 1 is ON, 0 is OFF
+Viewer.on: 1
+
+Viewer.KeyFrameSize: 0.6
+Viewer.KeyFrameLineWidth: 2
+Viewer.GraphLineWidth: 1
+Viewer.PointSize: 8
+Viewer.LineSize: 1
+Viewer.CameraSize: 0.7
+Viewer.CameraLineWidth: 3
+Viewer.ViewpointX: 0
+Viewer.ViewpointY: -100
+Viewer.ViewpointZ: -0.1
+Viewer.ViewpointF: 2000
+#--------------------------------------------------------------------------------------------
+# Camera Parameters. Adjust them! (list of params based on kitti00-02.yaml and webcam.yaml)
+#--------------------------------------------------------------------------------------------
+
+# Camera matrix from marulan paper Matlab output:
+# Focal length: fc = [790.131547995049573; 826.825751328548790];
+# %-- Principal point: cc = [328.685823692670340; 164.376489311973216]; clipping ajustment: 264.685823692670340; 123.376489311973216
+# %-- Skew coefficient: alpha c = 0.000000000000000;
+# %-- Distortion coefficients:
+# kc = [−0.466898225930376; 0.246094535921152; 0.011203533644424; −0.005108186223306; 0.000000000000000];
+# %-- Image size: nx = 640; ny = 480; (just for the calibration frames)
+#     The images are are usually clipped to 511 × 398 to remove useless black bands on the sides
+# Carlos note: the exact clipping position is not indicated
+#    measuring on the sample image in the paper it seems to be: 64;41-575;439 (left;top-right;bottom)
+#    therefore discounting 64;41 from cx;cy 
+
+# Camera calibration and distortion parameters (OpenCV) 
+Camera.fx: 790.131547995049573
+Camera.fy: 826.825751328548790
+Camera.cx: 264.685823692670340
+Camera.cy: 123.376489311973216
+
+Camera.k1: -0.466898225930376
+Camera.k2: 0.246094535921152
+Camera.p1: 0.011203533644424
+Camera.p2: -0.005108186223306
+Camera.k3: 0.000000000000000
+
+Camera.width: 511
+Camera.height: 398
+
+# Camera frames per second 
+# 8ms interval
+Camera.fps: 12.5
+
+# Color order of the images (0: BGR, 1: RGB. It is ignored if images are grayscale)
+# IR grayscale, Spectral response range: 7-14µm
+Camera.RGB: 1
+
+#--------------------------------------------------------------------------------------------
+# Features extraction 
+#--------------------------------------------------------------------------------------------
+
+FeatureTrackerConfig.nFeatures: 2000
+

@@ -9,7 +9,8 @@ DATASET:
   #type: VIDEO_DATASET  # for kitti
   #type: ROS1BAG_DATASET
   #type: ROS2BAG_DATASET  
-  type: FOLDER_DATASET  # for marulan
+  type: FOLDER_DATASET  # for marulan visual
+  type: FOLDER_IR_DATASET  # for marulan IR
   #type: LIVE_DATASET  # Not recommended for current development stage
 
 
@@ -135,6 +136,18 @@ FOLDER_DATASET:
   settings: settings/MarulanVisual.yaml
   #groundtruth_file: groundtruth.txt
   fps: 10
+  timestamps: Timestamps.txt # can be used here and to be intended as the frame timestamps 
+  start_frame_id: 0
+
+FOLDER_IR_DATASET:
+  type: folder 
+  sensor_type: mono   # Here, 'sensor_type' can be only 'mono' 
+  base_path: /mnt/c/src/tcc/datasets/ACFR/29-DynamicDayTriangleClear/VideoIR/
+  # 'name' is used for specifying a glob pattern, e.g. *png, *jpeg, etc...
+  name: 'Images/*bmp'  
+  settings: settings/MarulanIR.yaml
+  #groundtruth_file: groundtruth.txt
+  fps: 12.5
   timestamps: Timestamps.txt # can be used here and to be intended as the frame timestamps 
   start_frame_id: 0
 
